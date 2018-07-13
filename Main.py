@@ -1,12 +1,13 @@
 import asyncio
 import csv
+import time
 from discord.ext.commands import Bot
 
 BOT_PREFIX = ("?", "!")
 client = Bot(command_prefix=BOT_PREFIX)
 TOKEN = 'NDY0MTA5MTU4MjM3NjAxODIy.Dh6LAw.NtaEigUvvWBgkH7vms3khyFQfqQ'
 
-#PICKS = []#Unused. Array of all picks if needed in future
+PICKS = []# Array of all picks if needed in future
 
 list = [""]*5 #initial list for pick dictionary
 pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
@@ -26,6 +27,38 @@ async def on_message(message): #New message event
         #Create dictionary for pick
         pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
 
+        #Check Pick list for duplicate
+        if not any(p['User'] == pick['User'] for p in PICKS):
+            print("Not duplicate")
+            # Append pick dictionary to CSV file
+            with open("picks.csv", 'a') as file:
+                newWriter = csv.DictWriter(file, pick.keys())
+                newWriter.writerow(pick)
+
+            # Format output with key value pairs
+            string = ""
+            for key, value in pick.items():
+                string += key + ": " + value + ", "
+
+            # Output to discord
+            msg = await client.send_message(message.channel, "Pick recorded " + string[:-2])  # cut off final comma
+            await client.add_reaction(msg,"✅")
+            await client.add_reaction(msg,"❎")
+            bot = True
+            while bot == True:
+                res = await client.wait_for_reaction(["✅","❎"],message=msg) #
+                bot = res.user.bot
+            if res.reaction.emoji == "✅":
+                await client.send_message(message.channel, "Pick confirmed. Next team on the clock")
+                PICKS.append(pick)
+            elif res.reaction.emoji == "❎":
+                await client.send_message(message.channel, "Pick canceled. Previous team remain on the clock")
+
+        else:
+            print("Duplicate Pick")
+            await client.send_message(message.channel, "Fucking idiot they've already been picked!")  # cut off final comma
+
+
         #Team detection. Ya know. this is a really bad way to do this.. oh well to late to change now. Redo this later?
         TeamList = [["Buffalo Stampede","Buffalo","Stampede","BUF"],
                     ["Hamilton Steelhawks","Hamilton","Steelhawks","HAM","Hawks"],
@@ -44,20 +77,17 @@ async def on_message(message): #New message event
                     ]
 
         #Send message to confirm
+    elif str(message.channel) == "official-picks" and message.author.bot == True:
+        last_bot_message = message.id
 
 
-        #Append pick dictionary to CSV file
-        with open("picks.csv", 'a') as file:
-            newWriter = csv.DictWriter(file, pick.keys())
-            newWriter.writerow(pick)
+# async def on_reaction_add(reaction):
+#     if reaction.message == last_bot_message:
+#         if reaction.emoji == "✅":
+#             print("Confirmed")
+#         elif reaction.emoji == "❎":
+#             pass
 
-        #Format output with key value pairs
-        string = ""
-        for key,value in pick.items():
-            string += key + ": " + value + ", "
-
-        #Output to discord
-        await client.send_message(message.channel, "Pick recorded " + string[:-2])#cut off final comma
 
 
 
