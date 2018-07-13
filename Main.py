@@ -30,10 +30,6 @@ async def on_message(message): #New message event
         #Check Pick list for duplicate
         if not any(p['User'] == pick['User'] for p in PICKS):
             print("Not duplicate")
-            # Append pick dictionary to CSV file
-            with open("picks.csv", 'a') as file:
-                newWriter = csv.DictWriter(file, pick.keys())
-                newWriter.writerow(pick)
 
             # Format output with key value pairs
             string = ""
@@ -42,16 +38,23 @@ async def on_message(message): #New message event
 
             # Output to discord
             msg = await client.send_message(message.channel, "Pick recorded " + string[:-2])  # cut off final comma
+            #Get confirmation for pick
+            #add initial reactions
             await client.add_reaction(msg,"✅")
             await client.add_reaction(msg,"❎")
+            # Wait for not bot reaction
             bot = True
             while bot == True:
-                res = await client.wait_for_reaction(["✅","❎"],message=msg) #
-                bot = res.user.bot
-            if res.reaction.emoji == "✅":
+                res = await client.wait_for_reaction(["✅","❎"],message=msg) #waits for reaction to be added, returns reaction, user
+                bot = res.user.bot #Check if reaction was initial bot reaction
+            #User reactions
+            if res.reaction.emoji == "✅": #Confirm pick
                 await client.send_message(message.channel, "Pick confirmed. Next team on the clock")
-                PICKS.append(pick)
-            elif res.reaction.emoji == "❎":
+                PICKS.append(pick) #add to pick list
+                with open("picks.csv", 'a') as file: #write pick to CSV file
+                    newWriter = csv.DictWriter(file, pick.keys())
+                    newWriter.writerow(pick)
+            elif res.reaction.emoji == "❎": #Cancel pick
                 await client.send_message(message.channel, "Pick canceled. Previous team remain on the clock")
 
         else:
