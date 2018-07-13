@@ -2,10 +2,11 @@ import asyncio
 import csv
 import time
 from discord.ext.commands import Bot
+from pathlib import Path
 
 BOT_PREFIX = ("?", "!")
 client = Bot(command_prefix=BOT_PREFIX)
-TOKEN = 'NDY0MTA5MTU4MjM3NjAxODIy.Dh6LAw.NtaEigUvvWBgkH7vms3khyFQfqQ'
+TOKEN = Path('Token.txt').read_text()
 
 PICKS = []# Array of all picks if needed in future
 
