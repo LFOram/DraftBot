@@ -3,7 +3,7 @@ import csv
 import time
 from discord.ext.commands import Bot
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
+import datetime
 
 BOT_PREFIX = ("?", "!")
 client = Bot(command_prefix=BOT_PREFIX)
@@ -11,6 +11,7 @@ TOKEN = Path('Token.txt').read_text()
 
 #Array of all picks if needed in future
 PICKS = []
+FILE = ""
 
 SHLDraftStarted = False
 SMJHLDraftStarted = False
@@ -18,30 +19,61 @@ SMJHLDraftStarted = False
 list = [""]*5 #initial list for pick dictionary
 pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
 #Write headers for CSV file
-with open("picks.csv", 'w') as file:
-    newWriter = csv.DictWriter(file, pick.keys())
-    newWriter.writeheader()
+
 
 TeamList = [["Buffalo Stampede","Buffalo","Stampede","BUF"],
-                        ["Hamilton Steelhawks","Hamilton","Steelhawks","HAM","Hawks"],
-                        ["Manhattan Rage","Manhattan","Rage","MAN"],
-                        ["Minnesota Chiefs","Minnesota","Chiefs","MIN"],
-                        ["New England Wolfpack","New England","Wolfpack","NEW"],
-                        ["Toronto North Stars","Toronto","North Stars","TOR",],
-                        ["West Kendall Platoon","West Kendall","Platoon","WKP",],
-                        ["Calgary Dragons","Calgary","Dragons","CAL"],
-                        ["Edmonton Blizzard","Edmonton","Blizzard","EDM",],
-                        ["Los Angeles Panthers","Los Angeles","Panthers","LAP"],
-                        ["San Francisco Pride","San Francisco","Pride","SFP"],
-                        ["Seattle Riot","Seattle","Riot","SEA","LOL"],
-                        ["Texas Renegades","Texas","Renegades","TEX"],
-                        ["Winnipeg Jets","Winnipeg","Jets","WPG"]
-                        ]
+            ["Hamilton Steelhawks","Hamilton","Steelhawks","HAM","Hawks"],
+            ["Manhattan Rage","Manhattan","Rage","MAN"],
+            ["Minnesota Chiefs","Minnesota","Chiefs","MIN"],
+            ["New England Wolfpack","New England","Wolfpack","NEW"],
+            ["Toronto North Stars","Toronto","North Stars","TOR",],
+            ["West Kendall Platoon","West Kendall","Platoon","WKP",],
+            ["Calgary Dragons","Calgary","Dragons","CAL"],
+            ["Edmonton Blizzard","Edmonton","Blizzard","EDM",],
+            ["Los Angeles Panthers","Los Angeles","Panthers","LAP"],
+            ["San Francisco Pride","San Francisco","Pride","SFP"],
+            ["Seattle Riot","Seattle","Riot","SEA","LOL"],
+            ["Texas Renegades","Texas","Renegades","TEX"],
+            ["Winnipeg Jets","Winnipeg","Jets","WPG"]
+            ]
 
 @client.event
 async def on_message(message): #New message event
     global SHLDraftStarted
     global SMJHLDraftStarted
+    global pick
+    global FILE
+
+    if message.content.startswith('!'):
+        if message.content.lower() == "!startshldraft":
+            SHLDraftStarted = True
+            now = datetime.datetime.now()
+            FILE = now.strftime("%Y-%m-%d-") + "SHLDraft" + ".csv"
+            print(FILE)
+            with open(FILE, 'w') as file:
+                newWriter = csv.DictWriter(file, pick.keys())
+                newWriter.writeheader()
+            await client.send_message(message.channel, "Draft starting, SHL Mode")
+        elif message.content.lower() == "!startsmjhldraft":
+            SMJHLDraftStarted = True
+        elif message.content.lower() == "!enddraft":
+            SHLDraftStarted = False
+            SMJHLDraftStarted = False
+            # Add some stuff that needs to be done when the draft ends blah blah etc etc
+        elif message.content.lower() == "!addpick":
+            # Function for inserting pick
+            pass
+        elif message.content.lower() == "!removepick":
+            # Function for removing pick
+            pass
+        elif message.content.lower() == "!listpicks":
+            # function to list all picks
+            print("listing picks")
+            output = listAllPicks(PICKS, message)
+            await client.send_message(message.channel, output)
+        else:
+            await client.send_message(message.channel, "Invalid Command")
+
     if str(message.channel) == "official-picks" and message.author.bot == False:
         print(message.content.startswith("!"))
         if SHLDraftStarted == True and message.content.startswith("!") == False:  #If in the pick channel
@@ -87,7 +119,7 @@ async def on_message(message): #New message event
                             pick['Team'] = team[0] #replace team with full team name
 
                     PICKS.append(pick) #add to pick list
-                    with open("picks.csv", 'a') as file: #write pick to CSV file
+                    with open(FILE, 'a') as file: #write pick to CSV file
                         newWriter = csv.DictWriter(file, pick.keys())
                         newWriter.writerow(pick)
                 elif res.reaction.emoji == "❎": #Cancel pick
@@ -104,29 +136,7 @@ async def on_message(message): #New message event
             #Send message to confirm
         elif str(message.channel) == "official-picks" and message.author.bot == True:
             last_bot_message = message.id
-        if message.content.startswith('!'):
-            if message.content.lower() == "!startshldraft":
-                SHLDraftStarted = True
-                await client.send_message(message.channel,"Draft starting, SHL Mode")
-            elif message.content.lower() == "!startsmjhldraft":
-                SMJHLDraftStarted = True
-            elif message.content.lower() == "!enddraft":
-                SHLDraftStarted = False
-                SMJHLDraftStarted = False
-                #Add some stuff that needs to be done when the draft ends blah blah etc etc
-            elif message.content.lower() == "!addpick":
-                #Function for inserting pick
-                pass
-            elif message.content.lower() == "!removepick":
-                #Function for removing pick
-                pass
-            elif message.content.lower() == "!listpicks":
-                #function to list all picks
-                print("listing picks")
-                output = listAllPicks(PICKS,message)
-                await client.send_message(message.channel,output)
-            else:
-                await client.send_message(message.channel, "Invalid Command")
+
 
 def listAllPicks(Picks,message):
     output =""
@@ -153,6 +163,6 @@ def listAllPicks(Picks,message):
 
 
 
-
+#If you are reading this I am sorry, this is such bad code
 
 client.run(TOKEN)
