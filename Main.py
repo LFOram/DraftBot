@@ -1,11 +1,10 @@
-import asyncio
 import csv
-import time
-from discord.ext.commands import Bot
+from discord.ext import commands
 from pathlib import Path
 import datetime
 
 BOT_PREFIX = ("?", "!")
+Bot = commands.Bot
 client = Bot(command_prefix=BOT_PREFIX)
 TOKEN = Path('Token.txt').read_text()
 
@@ -18,8 +17,6 @@ SMJHLDraftStarted = False
 
 list = [""]*5 #initial list for pick dictionary
 pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
-#Write headers for CSV file
-
 
 TeamList = [["Buffalo Stampede","Buffalo","Stampede","BUF"],
             ["Hamilton Steelhawks","Hamilton","Steelhawks","HAM","Hawks"],
@@ -37,50 +34,75 @@ TeamList = [["Buffalo Stampede","Buffalo","Stampede","BUF"],
             ["Winnipeg Jets","Winnipeg","Jets","WPG"]
             ]
 
+
+@client.command(name = "RemovePick",
+                pass_context = True)
+async def RemovePick(context,args):
+    try:
+        pickNo = int(args)
+        for i,p in enumerate(PICKS):
+            if int(p['Pick Number']) == pickNo:
+                PICKS.pop(i)
+                await client.say("Pick removed")
+    except ValueError:
+        await client.send_message(context.message.channel, "Please select a pick number")
+
+@client.command(pass_context=True)
+async def StartSHLDraft(context):
+    global SHLDraftStarted
+    SHLDraftStarted = True
+    now = datetime.datetime.now()
+    FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SHLDraft" + ".csv"
+    print(FILE)
+    with open(FILE, 'w') as file:
+        newWriter = csv.DictWriter(file, pick.keys())
+        newWriter.writeheader()
+    await client.send_message(context.message.channel, "Draft starting, SHL Mode")
+
+@client.command(pass_context=True)
+async def StartSMJHLDraft(context):
+    global SMJHLDraftStarted
+    SMJHLDraftStarted = True
+    now = datetime.datetime.now()
+    FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SMJHLDraft" + ".csv"
+    print(FILE)
+    with open(FILE, 'w') as file:
+        newWriter = csv.DictWriter(file, pick.keys())
+        newWriter.writeheader()
+    await client.send_message(message.channel, "Draft starting, SMJHL Mode")
+
+@client.command(pass_context=True)
+async def EndDraft(context):
+    global SHLDraftStarted
+    global SMJHLDraftStarted
+    SHLDraftStarted = False
+    SMJHLDraftStarted = False
+    await client.send_message(context.message.channel, "Draft Ending")
+
+@client.command(pass_context=True)
+async def ListPicks(context):
+    # function to list all picks
+    print("listing picks")
+    output = listAllPicks(PICKS)
+    await client.send_message(context.message.channel, output)
+
+
+@client.command(pass_context=True)
+async def Kill(context):
+    raise SystemExit
+
+@client.command(pass_context=True)
+async def test(ctx,arg):
+    await client.say(arg)
+
+
+
 @client.event
 async def on_message(message): #New message event
     global SHLDraftStarted
     global SMJHLDraftStarted
     global pick
     global FILE
-
-    if message.content.startswith('!'):
-        if message.content.lower() == "!startshldraft":
-            SHLDraftStarted = True
-            now = datetime.datetime.now()
-            FILE = now.strftime("%Y-%m-%d-") + "SHLDraft" + ".csv"
-            print(FILE)
-            with open(FILE, 'w') as file:
-                newWriter = csv.DictWriter(file, pick.keys())
-                newWriter.writeheader()
-            await client.send_message(message.channel, "Draft starting, SHL Mode")
-        elif message.content.lower() == "!startsmjhldraft":
-            SMJHLDraftStarted = True
-            now = datetime.datetime.now()
-            FILE = now.strftime("%Y-%m-%d-") + "SMJHLDraft" + ".csv"
-            print(FILE)
-            with open(FILE, 'w') as file:
-                newWriter = csv.DictWriter(file, pick.keys())
-                newWriter.writeheader()
-            await client.send_message(message.channel, "Draft starting, SMJHL Mode")
-        elif message.content.lower() == "!enddraft":
-            SHLDraftStarted = False
-            SMJHLDraftStarted = False
-            await client.send_message(message.channel, "Draft Ending")
-            # Add some stuff that needs to be done when the draft ends blah blah etc etc
-        elif message.content.lower() == "!addpick":
-            # Function for inserting pick
-            pass
-        elif message.content.lower() == "!removepick":
-            # Function for removing pick
-            pass
-        elif message.content.lower() == "!listpicks":
-            # function to list all picks
-            print("listing picks")
-            output = listAllPicks(PICKS, message)
-            await client.send_message(message.channel, output)
-        else:
-            await client.send_message(message.channel, "Invalid Command")
 
     if str(message.channel) == "official-picks" and message.author.bot == False:
         print(message.content.startswith("!"))
@@ -158,16 +180,14 @@ async def on_message(message): #New message event
                 except IndexError:
                     await client.send_message(message.channel, "Follow the format dumb dumb")
 
-
-            #Team detection. Ya know. this is a really bad way to do this.. oh well to late to change now. Redo this later?
-
-
             #Send message to confirm
         elif str(message.channel) == "official-picks" and message.author.bot == True:
             last_bot_message = message.id
 
+    await client.process_commands(message)
 
-def listAllPicks(Picks,message):
+
+def listAllPicks(Picks):
     output ="```"
     print("List all functions")
     for pick in Picks:
@@ -175,20 +195,7 @@ def listAllPicks(Picks,message):
         for key, value in pick.items():
             string += key + ": " + value + ", "
         output = output + ("\n" + string[:-2])
-    return (output + "```")
-
-
-
-
-# async def on_reaction_add(reaction):
-#     if reaction.message == last_bot_message:
-#         if reaction.emoji == "✅":
-#             print("Confirmed")
-#         elif reaction.emoji == "❎":
-#             pass
-
-
-
+    return (output + " ```")
 
 
 
