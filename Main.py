@@ -56,6 +56,13 @@ async def on_message(message): #New message event
             await client.send_message(message.channel, "Draft starting, SHL Mode")
         elif message.content.lower() == "!startsmjhldraft":
             SMJHLDraftStarted = True
+            now = datetime.datetime.now()
+            FILE = now.strftime("%Y-%m-%d-") + "SMJHLDraft" + ".csv"
+            print(FILE)
+            with open(FILE, 'w') as file:
+                newWriter = csv.DictWriter(file, pick.keys())
+                newWriter.writeheader()
+            await client.send_message(message.channel, "Draft starting, SMJHL Mode")
         elif message.content.lower() == "!enddraft":
             SHLDraftStarted = False
             SMJHLDraftStarted = False
@@ -77,7 +84,7 @@ async def on_message(message): #New message event
 
     if str(message.channel) == "official-picks" and message.author.bot == False:
         print(message.content.startswith("!"))
-        if SHLDraftStarted == True and message.content.startswith("!") == False:  #If in the pick channel
+        if (SHLDraftStarted == True or SMJHLDraftStarted == True) and message.content.startswith("!") == False:  #If in the pick channel
             #parse message
             print(message.author)
             string = message.content #Get message
@@ -93,7 +100,10 @@ async def on_message(message): #New message event
             else:
                 try:
                    #Create dictionary for pick
-                    pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
+                    if SHLDraftStarted == True:
+                        pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
+                    elif SMJHLDraftStarted == True:
+                        pick = {"Pick Number":list[0],"Team":list[1],"Player":list[2],"Position":list[3],"User":list[4]}
 
                     #Check Pick list for duplicate
                     if not any(p['User'] == pick['User'] for p in PICKS):
@@ -105,7 +115,7 @@ async def on_message(message): #New message event
                             string += key + ": " + value + ", "
 
                         # Output to discord
-                        msg = await client.send_message(message.channel, "Pick recorded " + string[:-2])  # cut off final comma
+                        msg = await client.send_message(message.channel, "Pick recorded ``` " + string[:-2] +"```")  # cut off final comma
                         #Get confirmation for pick
                         #add initial reactions
                         await client.add_reaction(msg,"✅")
@@ -145,7 +155,7 @@ async def on_message(message): #New message event
                                 # Output to discord
                                 msg = await client.send_message(message.channel,"```" + string[:-2] + "```")  # cut off final comma
 
-                except:
+                except IndexError:
                     await client.send_message(message.channel, "Follow the format dumb dumb")
 
 
