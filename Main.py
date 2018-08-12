@@ -59,6 +59,7 @@ async def on_message(message): #New message event
         elif message.content.lower() == "!enddraft":
             SHLDraftStarted = False
             SMJHLDraftStarted = False
+            await client.send_message(message.channel, "Draft Ending")
             # Add some stuff that needs to be done when the draft ends blah blah etc etc
         elif message.content.lower() == "!addpick":
             # Function for inserting pick
@@ -134,6 +135,16 @@ async def on_message(message): #New message event
                     else:
                         print("Duplicate Pick")
                         await client.send_message(message.channel, "Fucking idiot they've already been picked!")  # cut off final comma
+                        #find previous pick
+                        for p in PICKS:
+                            if pick['User'] == p['User']:
+                                # Format output with key value pairs
+                                string = ""
+                                for key, value in p.items():
+                                    string += key + ": " + value + ", "
+                                # Output to discord
+                                msg = await client.send_message(message.channel,"```" + string[:-2] + "```")  # cut off final comma
+
                 except:
                     await client.send_message(message.channel, "Follow the format dumb dumb")
 
@@ -147,14 +158,14 @@ async def on_message(message): #New message event
 
 
 def listAllPicks(Picks,message):
-    output =""
+    output ="```"
     print("List all functions")
     for pick in Picks:
         string = ""
         for key, value in pick.items():
             string += key + ": " + value + ", "
         output = output + ("\n" + string[:-2])
-    return (output)
+    return (output + "```")
 
 
 
