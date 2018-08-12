@@ -81,53 +81,61 @@ async def on_message(message): #New message event
             print(message.author)
             string = message.content #Get message
             list = string.split("-") #Split at -
-
-            #strip spaces from input
-            for i,item in enumerate(list):
+            # strip spaces from input
+            for i, item in enumerate(list):
                 list[i] = item.strip()
-            #Create dictionary for pick
-            pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
 
-            #Check Pick list for duplicate
-            if not any(p['User'] == pick['User'] for p in PICKS):
-                print("Not duplicate")
-
-                # Format output with key value pairs
-                string = ""
-                for key, value in pick.items():
-                    string += key + ": " + value + ", "
-
-                # Output to discord
-                msg = await client.send_message(message.channel, "Pick recorded " + string[:-2])  # cut off final comma
-                #Get confirmation for pick
-                #add initial reactions
-                await client.add_reaction(msg,"✅")
-                await client.add_reaction(msg,"❎")
-                # Wait for not bot reaction
-                bot = True
-                while bot == True:
-                    res = await client.wait_for_reaction(["✅","❎"],message=msg) #waits for reaction to be added, returns reaction, user
-                    bot = res.user.bot #Check if reaction was initial bot reaction
-                #User reactions
-                if res.reaction.emoji == "✅": #Confirm pick
-                    await client.send_message(message.channel, "Pick confirmed. Next team on the clock")
-
-                    #Replace team with full name
-                    pick['Team'] = pick['Team'].strip()
-                    for i,team in enumerate(TeamList): #traverse list to correct team
-                        if pick['Team'] in TeamList[i]: #find team
-                            pick['Team'] = team[0] #replace team with full team name
-
-                    PICKS.append(pick) #add to pick list
-                    with open(FILE, 'a') as file: #write pick to CSV file
-                        newWriter = csv.DictWriter(file, pick.keys())
-                        newWriter.writerow(pick)
-                elif res.reaction.emoji == "❎": #Cancel pick
-                    await client.send_message(message.channel, "Pick canceled. Previous team remain on the clock")
-
+            print([x.lower() for x in list])
+            if "pass" in [x.lower() for x in list]:
+                print("Pick(s) Passed")
+                await client.send_message(message.channel, "Pick(s) Passed")
             else:
-                print("Duplicate Pick")
-                await client.send_message(message.channel, "Fucking idiot they've already been picked!")  # cut off final comma
+                try:
+                   #Create dictionary for pick
+                    pick = {"Pick Number":list[0],"Team":list[1],"User":list[2],"Position":list[3],"Player":list[4]}
+
+                    #Check Pick list for duplicate
+                    if not any(p['User'] == pick['User'] for p in PICKS):
+                        print("Not duplicate")
+
+                        # Format output with key value pairs
+                        string = ""
+                        for key, value in pick.items():
+                            string += key + ": " + value + ", "
+
+                        # Output to discord
+                        msg = await client.send_message(message.channel, "Pick recorded " + string[:-2])  # cut off final comma
+                        #Get confirmation for pick
+                        #add initial reactions
+                        await client.add_reaction(msg,"✅")
+                        await client.add_reaction(msg,"❎")
+                        # Wait for not bot reaction
+                        bot = True
+                        while bot == True:
+                            res = await client.wait_for_reaction(["✅","❎"],message=msg) #waits for reaction to be added, returns reaction, user
+                            bot = res.user.bot #Check if reaction was initial bot reaction
+                        #User reactions
+                        if res.reaction.emoji == "✅": #Confirm pick
+                            await client.send_message(message.channel, "Pick confirmed. Next team on the clock")
+
+                            #Replace team with full name
+                            pick['Team'] = pick['Team'].strip()
+                            for i,team in enumerate(TeamList): #traverse list to correct team
+                                if pick['Team'] in TeamList[i]: #find team
+                                    pick['Team'] = team[0] #replace team with full team name
+
+                            PICKS.append(pick) #add to pick list
+                            with open(FILE, 'a') as file: #write pick to CSV file
+                                newWriter = csv.DictWriter(file, pick.keys())
+                                newWriter.writerow(pick)
+                        elif res.reaction.emoji == "❎": #Cancel pick
+                            await client.send_message(message.channel, "Pick canceled. Previous team remain on the clock")
+
+                    else:
+                        print("Duplicate Pick")
+                        await client.send_message(message.channel, "Fucking idiot they've already been picked!")  # cut off final comma
+                except:
+                    await client.send_message(message.channel, "Follow the format dumb dumb")
 
 
             #Team detection. Ya know. this is a really bad way to do this.. oh well to late to change now. Redo this later?
