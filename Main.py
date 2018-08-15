@@ -11,6 +11,7 @@ TOKEN = Path('Token.txt').read_text()
 #Array of all picks if needed in future
 PICKS = []
 FILE = ""
+CHANNEL = "official-picks"
 
 SHLDraftStarted = False
 SMJHLDraftStarted = False
@@ -50,41 +51,45 @@ async def RemovePick(context,args):
 @client.command(pass_context=True)
 async def StartSHLDraft(context):
     global SHLDraftStarted
-    SHLDraftStarted = True
-    now = datetime.datetime.now()
-    FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SHLDraft" + ".csv"
-    print(FILE)
-    with open(FILE, 'w') as file:
-        newWriter = csv.DictWriter(file, pick.keys())
-        newWriter.writeheader()
-    await client.send_message(context.message.channel, "Draft starting, SHL Mode")
+    if context.message.channel == CHANNEL:
+        SHLDraftStarted = True
+        now = datetime.datetime.now()
+        FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SHLDraft" + ".csv"
+        print(FILE)
+        with open(FILE, 'w') as file:
+            newWriter = csv.DictWriter(file, pick.keys())
+            newWriter.writeheader()
+        await client.send_message(context.message.channel, "Draft starting, SHL Mode")
 
 @client.command(pass_context=True)
 async def StartSMJHLDraft(context):
     global SMJHLDraftStarted
-    SMJHLDraftStarted = True
-    now = datetime.datetime.now()
-    FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SMJHLDraft" + ".csv"
-    print(FILE)
-    with open(FILE, 'w') as file:
-        newWriter = csv.DictWriter(file, pick.keys())
-        newWriter.writeheader()
-    await client.send_message(message.channel, "Draft starting, SMJHL Mode")
+    if context.message.channel == CHANNEL:
+        SMJHLDraftStarted = True
+        now = datetime.datetime.now()
+        FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SMJHLDraft" + ".csv"
+        print(FILE)
+        with open(FILE, 'w') as file:
+            newWriter = csv.DictWriter(file, pick.keys())
+            newWriter.writeheader()
+        await client.send_message(message.channel, "Draft starting, SMJHL Mode")
 
 @client.command(pass_context=True)
 async def EndDraft(context):
     global SHLDraftStarted
     global SMJHLDraftStarted
-    SHLDraftStarted = False
-    SMJHLDraftStarted = False
-    await client.send_message(context.message.channel, "Draft Ending")
+    if context.message.channel == CHANNEL:
+        SHLDraftStarted = False
+        SMJHLDraftStarted = False
+        await client.send_message(context.message.channel, "Draft Ending")
 
 @client.command(pass_context=True)
 async def ListPicks(context):
     # function to list all picks
-    print("listing picks")
-    output = listAllPicks(PICKS)
-    await client.send_message(context.message.channel, output)
+    if context.message.channel == CHANNEL:
+        print("listing picks")
+        output = listAllPicks(PICKS)
+        await client.send_message(context.message.channel, output)
 
 
 @client.command(pass_context=True)
