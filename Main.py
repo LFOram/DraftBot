@@ -52,10 +52,11 @@ async def RemovePick(context,args):
 async def StartSHLDraft(context):
     global SHLDraftStarted
     global CHANNEL
+    global FILE
     if str(context.message.channel) == CHANNEL:
         SHLDraftStarted = True
         now = datetime.datetime.now()
-        FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SHLDraft" + ".csv"
+        FILE = now.strftime("%Y-%m-%d-%H-%M-") + "SHLDraft" + ".csv"
         print(FILE)
         with open(FILE, 'w') as file:
             newWriter = csv.DictWriter(file, pick.keys())
@@ -67,6 +68,7 @@ async def StartSHLDraft(context):
 async def StartSMJHLDraft(context):
     global CHANNEL
     global SMJHLDraftStarted
+    global FILE
     if str(context.message.channel) == CHANNEL:
         SMJHLDraftStarted = True
         now = datetime.datetime.now()
@@ -82,10 +84,12 @@ async def EndDraft(context):
     global SHLDraftStarted
     global SMJHLDraftStarted
     global CHANNEL
+    global FILE
     if str(context.message.channel) == CHANNEL:
         SHLDraftStarted = False
         SMJHLDraftStarted = False
         await client.send_message(context.message.channel, "Draft Ending")
+        await client.send_file(context.message.channel, FILE)
 
 @client.command(pass_context=True)
 async def ListPicks(context):
@@ -210,5 +214,4 @@ def listAllPicks(Picks):
 
 
 #If you are reading this I am sorry, this is such bad code
-
 client.run(TOKEN)
