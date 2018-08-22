@@ -51,7 +51,8 @@ async def RemovePick(context,args):
 @client.command(pass_context=True)
 async def StartSHLDraft(context):
     global SHLDraftStarted
-    if context.message.channel == CHANNEL:
+    global CHANNEL
+    if str(context.message.channel) == CHANNEL:
         SHLDraftStarted = True
         now = datetime.datetime.now()
         FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SHLDraft" + ".csv"
@@ -59,12 +60,14 @@ async def StartSHLDraft(context):
         with open(FILE, 'w') as file:
             newWriter = csv.DictWriter(file, pick.keys())
             newWriter.writeheader()
+        print("SHL Start")
         await client.send_message(context.message.channel, "Draft starting, SHL Mode")
 
 @client.command(pass_context=True)
 async def StartSMJHLDraft(context):
+    global CHANNEL
     global SMJHLDraftStarted
-    if context.message.channel == CHANNEL:
+    if str(context.message.channel) == CHANNEL:
         SMJHLDraftStarted = True
         now = datetime.datetime.now()
         FILE = now.strftime("%Y-%m-%d-%h-%m-") + "SMJHLDraft" + ".csv"
@@ -78,15 +81,17 @@ async def StartSMJHLDraft(context):
 async def EndDraft(context):
     global SHLDraftStarted
     global SMJHLDraftStarted
-    if context.message.channel == CHANNEL:
+    global CHANNEL
+    if str(context.message.channel) == CHANNEL:
         SHLDraftStarted = False
         SMJHLDraftStarted = False
         await client.send_message(context.message.channel, "Draft Ending")
 
 @client.command(pass_context=True)
 async def ListPicks(context):
+    global CHANNEL
     # function to list all picks
-    if context.message.channel == CHANNEL:
+    if str(context.message.channel) == CHANNEL:
         print("listing picks")
         output = listAllPicks(PICKS)
         await client.send_message(context.message.channel, output)
@@ -96,9 +101,9 @@ async def ListPicks(context):
 async def Kill(context):
     raise SystemExit
 
-@client.command(pass_context=True)
-async def test(ctx,arg):
-    await client.say(arg)
+# @client.command(pass_context=True)
+# async def test(ctx,arg):
+#     await client.say(arg)
 
 
 
